@@ -11,7 +11,7 @@ import 'package:updatedemo/main.dart';
 import 'package:updatedemo/update/app_updater.dart';
 import 'package:updatedemo/update/update_manifest.dart';
 
-const base = 'https://felipe.eliasworks.uy/Apps/updates/zfl-update-demo/';
+const base = 'https://raw.githubusercontent.com/MrF3lipe/zfl-update-demo/main/updates/';
 String shaOf(List<int> b) => sha256.convert(b).toString();
 
 /// Canal nativo "zfl/update" falso: registra llamadas y simula el permiso.
@@ -152,6 +152,19 @@ void main() {
     await waitFor(t, () => r.urls.isNotEmpty);
     expect(r.urls, ['${base}version.json']);
     expect(find.text('Actualización disponible'), findsNothing);
+  });
+
+  testWidgets('version.json que no es JSON (página HTML anti-bots con 200) → error controlado, sin pop-up', (t) async {
+    FakeChannel(oldPath).attach();
+    final html = '<!doctype html><html><head><title>One moment, please...</title></head><body>…</body></html>';
+    final client = MockClient((r) async => http.Response(html, 200, headers: {'content-type': 'text/html; charset=utf-8'}));
+    final u = AppUpdater(client: client, platform: const AndroidUpdatePlatform(forceAndroid: true), workDir: () async => tmp.path);
+    await t.runAsync(() => u.check());
+    expect(u.state, UpdateState.idle);
+    expect(u.plan, isNull);
+    expect(u.lastError, 'version.json no válido');
+    expect(parseManifestBody(utf8.encode(html)), isNull);
+    expect(parseManifestBody(utf8.encode('{"format":1')), isNull);
   });
 
   testWidgets('Actualizar: parche (fromSha256 coincide) → sha256 exacto → PackageInstaller', (t) async {

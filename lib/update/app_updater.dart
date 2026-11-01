@@ -47,10 +47,19 @@ class AndroidUpdatePlatform implements UpdatePlatform {
   Future<bool> install(String apkPath) async => await channel.invokeMethod<bool>('install', {'path': apkPath}) ?? false;
 }
 
+/// Cuerpo de version.json → manifiesto, o null si no es JSON válido del formato 1 (HTML, vacío, truncado…).
+UpdateManifest? parseManifestBody(List<int> body, {Uri? base}) {
+  try {
+    return UpdateManifest.parse(jsonDecode(utf8.decode(body)), base: base);
+  } on FormatException {
+    return null;
+  }
+}
+
 Future<String> sha256OfFile(String path) async => (await sha256.bind(File(path).openRead()).first).toString();
 
 class AppUpdater extends ChangeNotifier {
-  static const manifestUrl = 'https://felipe.eliasworks.uy/Apps/updates/zfl-update-demo/version.json';
+  static const manifestUrl = 'https://raw.githubusercontent.com/MrF3lipe/zfl-update-demo/main/updates/version.json';
   static const appId = 'com.zofloridane.updatedemo';
 
   final http.Client client;
@@ -65,6 +74,7 @@ class AppUpdater extends ChangeNotifier {
   UpdatePlan? plan;
   Installed? current;
   double progress = 0;
+  String? lastError;
   String? _readyApk;
 
   void _set(UpdateState s) {
@@ -80,9 +90,17 @@ class AppUpdater extends ChangeNotifier {
       current = inst;
       notifyListeners();
       final res = await client.get(Uri.parse(manifestUrl)).timeout(const Duration(seconds: 20));
-      if (res.statusCode != 200) return;
-      final m = UpdateManifest.parse(jsonDecode(utf8.decode(res.bodyBytes)), base: Uri.parse(manifestUrl));
-      if (m == null) return;
+      if (res.statusCode != 200) {
+        lastError = 'HTTP ${res.statusCode}';
+        return;
+      }
+      final m = parseManifestBody(res.bodyBytes, base: Uri.parse(manifestUrl));
+      if (m == null) {
+        // p. ej. una página HTML anti-bots con 200: error controlado, sin pop-up.
+        lastError = 'version.json no válido';
+        return;
+      }
+      lastError = null;
       final quick = UpdatePlan.choose(m, app: appId, installedCode: inst.versionCode);
       if (quick == null) return;
       String? sha;

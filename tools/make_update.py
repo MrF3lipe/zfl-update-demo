@@ -18,7 +18,7 @@ try:
 except ImportError:
     sys.exit('Falta bsdiff4: pip install bsdiff4')
 
-BASE = 'https://felipe.eliasworks.uy/Apps/updates/zfl-update-demo'
+BASE = 'https://github.com/MrF3lipe/zfl-update-demo/releases/download/vX'
 APP = 'com.zofloridane.updatedemo'
 
 
@@ -37,7 +37,10 @@ def main(argv=None):
     ap.add_argument('--base-url', default=BASE)
     ap.add_argument('--app', default=APP)
     ap.add_argument('--relative', action='store_true', help='url relativas (apk/..., patch/...)')
+    ap.add_argument('--flat', action='store_true', help='url = base-url/<archivo> (assets de un GitHub Release)')
     a = ap.parse_args(argv)
+    if not a.relative and 'vX' in a.base_url:
+        sys.exit('Falta --base-url (p. ej. https://github.com/MrF3lipe/zfl-update-demo/releases/download/v2.0.0)')
     pre = '' if a.relative else a.base_url.rstrip('/') + '/'
 
     new = open(a.new, 'rb').read()
@@ -59,12 +62,12 @@ def main(argv=None):
         open(os.path.join(a.out, 'patch', name), 'wb').write(p)
         if sha(bsdiff4.patch(old, open(os.path.join(a.out, 'patch', name), 'rb').read())) != sha(new):
             sys.exit(f'el parche en disco desde {code} no da el sha256 del APK nuevo')
-        patches.append({'fromVersionCode': code, 'fromSha256': sha(old), 'url': f'{pre}patch/{name}',
+        patches.append({'fromVersionCode': code, 'fromSha256': sha(old), 'url': (f'{pre}{name}' if a.flat else f'{pre}patch/{name}'),
                         'sha256': sha(p), 'size': len(p)})
         print(f'parche {code}->{a.code}: {len(p)} bytes ({100 * len(p) / len(new):.1f} %)')
     manifest = {'format': 1, 'app': a.app, 'variants': {a.variant: {
         'version': a.version, 'versionCode': a.code,
-        'apk': {'url': f'{pre}apk/{apk_name}', 'sha256': sha(new), 'size': len(new)},
+        'apk': {'url': (f'{pre}{apk_name}' if a.flat else f'{pre}apk/{apk_name}'), 'sha256': sha(new), 'size': len(new)},
         'patches': sorted(patches, key=lambda x: -x['fromVersionCode'])}}}
     with open(os.path.join(a.out, 'version.json'), 'w') as f:
         json.dump(manifest, f, indent=2)

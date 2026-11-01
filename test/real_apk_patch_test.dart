@@ -10,6 +10,7 @@ import 'package:updatedemo/update/update_manifest.dart';
 
 const root = '/workspace/entregas/update-demo';
 final apks = {1: '$root/v1/zfl-update-1.0.0+1.apk', 2: '$root/v2/apk/universal-2.apk', 3: '$root/v3/apk/universal-3.apk'};
+// version.json con URLs absolutas de GitHub Releases; los archivos locales siguen en apk/ y patch/.
 
 void main() {
   final skip = !File('$root/v3/version.json').existsSync();
@@ -19,7 +20,7 @@ void main() {
       final m = UpdateManifest.parse(jsonDecode(File('$root/v$v/version.json').readAsStringSync()), base: base)!;
       final t = m.variants['universal']!;
       expect(t.versionCode, v);
-      expect(t.apk.url, base.resolve('apk/universal-$v.apk').toString());
+      expect(t.apk.url, 'https://github.com/MrF3lipe/zfl-update-demo/releases/download/v$v.0.0/universal-$v.apk');
       expect(await sha256OfFile('$root/v$v/apk/universal-$v.apk'), t.apk.sha256);
       expect(File('$root/v$v/apk/universal-$v.apk').lengthSync(), t.apk.size);
       expect(t.patches.map((p) => p.fromVersionCode).toSet(), {for (var f = 1; f < v; f++) f});

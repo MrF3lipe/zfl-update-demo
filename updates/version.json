@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "app": "com.zofloridane.updatedemo",
+  "variants": {
+    "universal": {
+      "version": "2.0.0",
+      "versionCode": 2,
+      "apk": {
+        "url": "https://github.com/MrF3lipe/zfl-update-demo/releases/download/v2.0.0/universal-2.apk",
+        "sha256": "cf5ae1efd9ac122b2bb39febb876a38eaf0419f593a0689d8a9f026035d5be54",
+        "size": 15175145
+      },
+      "patches": [
+        {
+          "fromVersionCode": 1,
+          "fromSha256": "95f683a393d9969bb46cf1c3570a4f79e48a1a5c3b1877588a52f5b9ebe7d8a1",
+          "url": "https://github.com/MrF3lipe/zfl-update-demo/releases/download/v2.0.0/universal-1-2.bsdiff",
+          "sha256": "d352193fe4b14991f50535cd574bb3595cb7af1d99aaf291e8f023d5896468ed",
+          "size": 6849
+        }
+      ]
+    }
+  }
+}
