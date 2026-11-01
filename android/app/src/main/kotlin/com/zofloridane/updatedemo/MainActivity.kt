@@ -27,6 +27,7 @@ class MainActivity : FlutterActivity() {
                     val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
                     result.success(mapOf("path" to applicationInfo.sourceDir, "versionCode" to code, "versionName" to info.versionName))
                 }
+                "filesDir" -> result.success(filesDir.absolutePath) // sin path_provider (más liviano)
                 "canInstall" -> result.success(canInstall())
                 "openInstallSettings" -> { openInstallSettings(); result.success(true) }
                 "install" -> result.success(install(File(call.argument<String>("path")!!)))

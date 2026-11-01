@@ -52,6 +52,8 @@ android {
         release {
             signingConfig = signingConfigs.findByName("release")
                 ?: throw GradleException("Falta ~/zfl-private/update-demo/key.properties")
+            isMinifyEnabled = true // R8
+            isShrinkResources = true
         }
     }
 }

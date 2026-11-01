@@ -11,7 +11,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 
 import 'bspatch.dart';
 import 'update_manifest.dart';
@@ -60,7 +59,7 @@ class AppUpdater extends ChangeNotifier {
   AppUpdater({http.Client? client, UpdatePlatform? platform, Future<String> Function()? workDir})
     : client = client ?? http.Client(),
       platform = platform ?? const AndroidUpdatePlatform(),
-      workDir = workDir ?? (() async => '${(await getApplicationSupportDirectory()).path}/updates');
+      workDir = workDir ?? (() async => '${await AndroidUpdatePlatform.channel.invokeMethod<String>('filesDir')}/updates');
 
   UpdateState state = UpdateState.idle;
   UpdatePlan? plan;
